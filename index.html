@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NovaCoin - Crowdfunding Platform</title>
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;min-height:100vh;}
+    .container{max-width:1200px;margin:0 auto;padding:20px;}
+
+    /* HEADER */
+    header{background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);padding:18px 28px;border-radius:15px;margin-bottom:28px;display:flex;justify-content:space-between;align-items:center;}
+    .logo{font-size:30px;font-weight:bold;background:linear-gradient(45deg,#FFD700,#FFA500);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+
+    /* BUTTONS */
+    .btn{border:none;padding:11px 22px;border-radius:22px;font-weight:bold;cursor:pointer;font-size:14px;transition:transform .15s,opacity .15s;}
+    .btn:hover{transform:scale(1.04);}
+    .btn:disabled{opacity:.45;cursor:not-allowed;transform:none;}
+    .btn-gold{background:linear-gradient(45deg,#FFD700,#FFA500);color:#333;}
+    .btn-green{background:linear-gradient(45deg,#43e97b,#38f9d7);color:#333;}
+    .btn-red{background:linear-gradient(45deg,#f44336,#e91e63);color:#fff;}
+    .btn-blue{background:linear-gradient(45deg,#2196F3,#00BCD4);color:#fff;}
+    .btn-sm{padding:8px 14px;font-size:12px;}
+
+    /* STATS */
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:28px;}
+    .stat-card{background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);padding:22px;border-radius:14px;text-align:center;}
+    .stat-label{font-size:13px;opacity:.8;margin-bottom:6px;}
+    .stat-value{font-size:32px;font-weight:bold;color:#FFD700;margin:4px 0;}
+    .stat-sub{font-size:11px;opacity:.55;}
+
+    /* SECTION */
+    .section{background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);padding:28px;border-radius:15px;margin-bottom:28px;}
+    .section-title{font-size:20px;font-weight:bold;color:#FFD700;margin-bottom:18px;}
+
+    /* FORM */
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+    .form-group{margin-bottom:2px;}
+    .form-group.full{grid-column:1/-1;}
+    label{display:block;margin-bottom:5px;font-size:13px;opacity:.9;}
+    input,textarea{width:100%;padding:11px;border-radius:9px;border:2px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#fff;font-size:14px;}
+    input:focus,textarea:focus{outline:none;border-color:#FFD700;}
+    input::placeholder,textarea::placeholder{color:rgba(255,255,255,.4);}
+
+    /* TABS */
+    .tabs{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+    .tab{padding:8px 20px;border-radius:20px;border:2px solid rgba(255,255,255,.3);background:transparent;color:#fff;cursor:pointer;font-size:13px;transition:all .2s;}
+    .tab.active{background:rgba(255,215,0,.25);border-color:#FFD700;color:#FFD700;font-weight:bold;}
+
+    /* CAMPAIGN CARDS */
+    .campaigns-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px;}
+    .campaign-card{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);padding:20px;border-radius:15px;transition:transform .2s,box-shadow .2s;}
+    .campaign-card:hover{transform:translateY(-4px);box-shadow:0 10px 28px rgba(0,0,0,.3);}
+    .card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px;}
+    .card-title{font-size:17px;font-weight:bold;color:#FFD700;}
+    .badge{font-size:11px;padding:3px 10px;border-radius:18px;white-space:nowrap;}
+    .badge.active {background:rgba(76,175,80,.3);border:1px solid #4CAF50;color:#4CAF50;}
+    .badge.ended  {background:rgba(244,67,54,.2);border:1px solid #f44336;color:#f44336;}
+    .badge.success{background:rgba(33,150,243,.25);border:1px solid #2196F3;color:#90CAF9;}
+    .card-desc{font-size:13px;opacity:.72;margin-bottom:14px;line-height:1.45;}
+    .card-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:12px;}
+    .cs{background:rgba(0,0,0,.2);border-radius:8px;padding:8px;text-align:center;}
+    .cs-val{font-size:14px;font-weight:bold;color:#FFD700;}
+    .cs-lbl{font-size:10px;opacity:.6;margin-top:2px;}
+    .progress-bar{background:rgba(0,0,0,.3);height:8px;border-radius:4px;overflow:hidden;margin-bottom:3px;}
+    .progress-fill{height:100%;background:linear-gradient(90deg,#FFD700,#FFA500);border-radius:4px;}
+    .progress-text{font-size:11px;opacity:.65;text-align:right;margin-bottom:10px;}
+    .reward-info{font-size:12px;opacity:.7;margin-bottom:12px;}
+    .card-actions{display:flex;flex-direction:column;gap:8px;}
+    .action-row{display:flex;gap:8px;align-items:center;}
+    .action-row input{flex:1;padding:9px;font-size:13px;}
+    .my-contribution{font-size:12px;background:rgba(255,215,0,.15);border-radius:6px;padding:6px 10px;margin-bottom:8px;}
+    .creator-addr{font-size:10px;opacity:.4;margin-top:10px;}
+
+    /* ALERTS */
+    .alert{padding:13px 17px;border-radius:10px;margin-bottom:18px;display:none;font-size:14px;}
+    .alert-success{background:rgba(76,175,80,.25);border:1px solid #4CAF50;}
+    .alert-error  {background:rgba(244,67,54,.25);border:1px solid #f44336;}
+    .network-badge{display:inline-block;padding:3px 11px;border-radius:11px;font-size:11px;background:rgba(76,175,80,.3);border:1px solid #4CAF50;margin-left:7px;}
+    .empty-state{text-align:center;padding:40px;opacity:.6;}
+    .empty-state .icon{font-size:46px;margin-bottom:10px;}
+
+    @media(max-width:768px){
+      .stats{grid-template-columns:repeat(2,1fr);}
+      .form-grid{grid-template-columns:1fr;}
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">🚀 NOVACOIN</div>
+    <div style="text-align:right">
+      <button id="connectWallet" class="btn btn-gold">🦊 Connect MetaMask</button>
+      <div id="walletInfo" style="display:none;margin-top:7px;font-size:13px;">
+        Connected: <strong id="address"></strong>
+        <span id="networkBadge" class="network-badge"></span>
+      </div>
+    </div>
+  </header>
+
+  <div id="alerts"></div>
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-label">Your ETH Balance</div>
+      <div class="stat-value" id="ethBalance">—</div>
+      <div class="stat-sub">Test ETH</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Your NOVA Tokens</div>
+      <div class="stat-value" id="novaBalance">—</div>
+      <div class="stat-sub">NOVA</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Campaigns</div>
+      <div class="stat-value" id="totalCampaigns">—</div>
+      <div class="stat-sub">Projects</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Raised</div>
+      <div class="stat-value" id="totalRaised">—</div>
+      <div class="stat-sub">ETH</div>
+    </div>
+  </div>
+
+  <!-- CREATE FORM -->
+  <div class="section">
+    <div class="section-title">🎯 Create New Campaign</div>
+    <form id="createForm">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Campaign Title</label>
+          <input type="text" id="fTitle" placeholder="e.g. Build Community School" required>
+        </div>
+        <div class="form-group full">
+          <label>Description</label>
+          <textarea id="fDesc" rows="2" placeholder="Describe your project..." required></textarea>
+        </div>
+        <div class="form-group">
+          <label>Funding Goal (ETH)</label>
+          <input type="number" id="fGoal" step="0.001" min="0.001" placeholder="0.1" required>
+        </div>
+        <div class="form-group">
+          <label>Duration (Seconds)</label>
+          <input type="number" id="fSeconds" min="1" placeholder="3600" required>
+        </div>
+      </div>
+      <br>
+      <button type="submit" class="btn btn-gold">🚀 Launch Campaign</button>
+    </form>
+  </div>
+
+  <!-- CAMPAIGNS -->
+  <div class="section">
+    <div class="section-title">📋 Campaigns</div>
+    <div class="tabs">
+      <button class="tab active" onclick="filterCampaigns('all',this)">All</button>
+      <button class="tab" onclick="filterCampaigns('active',this)">🟢 Active</button>
+      <button class="tab" onclick="filterCampaigns('ended',this)">🔴 Ended</button>
+      <button class="tab" onclick="filterCampaigns('mine',this)">👤 My Campaigns</button>
+    </div>
+    <div id="campaignsList">
+      <div class="empty-state">
+        <div class="icon">🔗</div>
+        <div>Connect your wallet to see campaigns</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// ⚠️  ЗАМЕНИ НА СВОЙ АДРЕС КОНТРАКТА ИЗ REMIX!
+// ============================================================
+const CONTRACT_ADDRESS = '0x2664e4559370ce58F4FEd8A1e9F1e37FE587f98A';
+// ============================================================
+
+const ABI = [
+  {"inputs":[{"internalType":"uint256","name":"_initialSupply","type":"uint256"}],"stateMutability":"nonpayable","type":"constructor"},
+  {"inputs":[{"internalType":"string","name":"_title","type":"string"},{"internalType":"string","name":"_description","type":"string"},{"internalType":"uint256","name":"_goalAmount","type":"uint256"},{"internalType":"uint256","name":"_durationDays","type":"uint256"}],"name":"createCampaign","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[{"internalType":"string","name":"_title","type":"string"},{"internalType":"string","name":"_description","type":"string"},{"internalType":"uint256","name":"_goalAmount","type":"uint256"},{"internalType":"uint256","name":"_durationSeconds","type":"uint256"}],"name":"createCampaignSeconds","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"_campaignId","type":"uint256"}],"name":"contribute","outputs":[],"stateMutability":"payable","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"_campaignId","type":"uint256"}],"name":"finalizeCampaign","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"_campaignId","type":"uint256"}],"name":"withdraw","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"_campaignId","type":"uint256"}],"name":"refund","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"_campaignId","type":"uint256"}],"name":"getCampaignDetails","outputs":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"address","name":"creator","type":"address"},{"internalType":"string","name":"title","type":"string"},{"internalType":"string","name":"description","type":"string"},{"internalType":"uint256","name":"goalAmount","type":"uint256"},{"internalType":"uint256","name":"deadline","type":"uint256"},{"internalType":"uint256","name":"amountRaised","type":"uint256"},{"internalType":"bool","name":"finalized","type":"bool"},{"internalType":"bool","name":"goalReached","type":"bool"},{"internalType":"bool","name":"creatorWithdrawn","type":"bool"},{"internalType":"uint256","name":"creatorWithdrawable","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"_campaignId","type":"uint256"},{"internalType":"address","name":"_user","type":"address"}],"name":"getUserContribution","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"internalType":"address","name":"_user","type":"address"}],"name":"getUserCampaigns","outputs":[{"internalType":"uint256[]","name":"","type":"uint256[]"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"_campaignId","type":"uint256"},{"internalType":"address","name":"_user","type":"address"}],"name":"canRefund","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"_campaignId","type":"uint256"}],"name":"canFinalize","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"_campaignId","type":"uint256"},{"internalType":"address","name":"_user","type":"address"}],"name":"canWithdraw","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"_weiAmount","type":"uint256"}],"name":"estimateReward","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"_campaignId","type":"uint256"}],"name":"getTimeLeft","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"_campaignId","type":"uint256"}],"name":"getCampaignStatus","outputs":[{"internalType":"bool","name":"isActive","type":"bool"},{"internalType":"bool","name":"isExpired","type":"bool"},{"internalType":"bool","name":"isFinalized","type":"bool"},{"internalType":"bool","name":"isSuccessful","type":"bool"},{"internalType":"bool","name":"refundable","type":"bool"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"_campaignId","type":"uint256"}],"name":"getProgressBps","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"campaignCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}
+];
+
+let web3, contract, userAccount;
+let allCampaigns = [];
+let currentFilter = 'all';
+const SUPPORTED_CHAINS = {
+  '0xaa36a7': 'Sepolia',
+  '0x4268': 'Holesky',
+  '0x539': 'Localhost (1337)',
+  '0x7a69': 'Localhost (31337)'
+};
+
+// ── INIT ──────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  document.getElementById('connectWallet').addEventListener('click', connectWallet);
+  document.getElementById('createForm').addEventListener('submit', createCampaign);
+});
+
+// ── CONNECT ───────────────────────────────────────────────────
+async function connectWallet() {
+  if (!window.ethereum) { showAlert('❌ Install MetaMask from metamask.io', 'error'); return; }
+  try {
+    const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+    userAccount = accounts[0];
+    const chainId = await ethereum.request({ method: 'eth_chainId' });
+
+    if (!SUPPORTED_CHAINS[chainId]) {
+      showAlert(`⚠️ Unsupported network (${chainId}). Switch to Sepolia, Holesky, or Localhost.`, 'error'); return;
+    }
+
+    web3     = new Web3(window.ethereum);
+    contract = new web3.eth.Contract(ABI, CONTRACT_ADDRESS);
+
+    document.getElementById('address').textContent      = short(userAccount);
+    document.getElementById('networkBadge').textContent = SUPPORTED_CHAINS[chainId];
+    document.getElementById('walletInfo').style.display = 'block';
+    document.getElementById('connectWallet').textContent = '✅ Connected';
+
+    showAlert('✅ Wallet connected!', 'success');
+    await loadAll();
+
+    ethereum.on('accountsChanged', async a => {
+      if (!a.length) {
+        userAccount = null;
+        document.getElementById('walletInfo').style.display = 'none';
+        document.getElementById('connectWallet').textContent = '🦊 Connect MetaMask';
+        showAlert('Wallet disconnected', 'error');
+        return;
+      }
+      userAccount = a[0];
+      document.getElementById('address').textContent = short(userAccount);
+      await loadAll();
+    });
+    ethereum.on('chainChanged', () => location.reload());
+  } catch(e) { showAlert('❌ ' + e.message, 'error'); }
+}
+
+// ── LOAD ALL ──────────────────────────────────────────────────
+async function loadAll() {
+  await loadBalances();
+  await loadCampaigns();
+}
+
+// ── BALANCES ──────────────────────────────────────────────────
+async function loadBalances() {
+  try {
+    const eth  = await web3.eth.getBalance(userAccount);
+    const nova = await contract.methods.balanceOf(userAccount).call();
+    document.getElementById('ethBalance').textContent  = parseFloat(web3.utils.fromWei(eth,'ether')).toFixed(4);
+    document.getElementById('novaBalance').textContent = Number(web3.utils.fromWei(nova,'ether')).toLocaleString();
+  } catch(e) { console.error(e); }
+}
+
+// ── LOAD CAMPAIGNS ────────────────────────────────────────────
+async function loadCampaigns() {
+  const list = document.getElementById('campaignsList');
+  list.innerHTML = '<div style="text-align:center;padding:20px;opacity:.7">⏳ Loading campaigns...</div>';
+
+  try {
+    const count = Number(await contract.methods.campaignCount().call());
+    document.getElementById('totalCampaigns').textContent = count;
+
+    if (count === 0) {
+      list.innerHTML = '<div class="empty-state"><div class="icon">📭</div><div>No campaigns yet. Create the first one!</div></div>';
+      document.getElementById('totalRaised').textContent = '0';
+      return;
+    }
+
+    allCampaigns = [];
+    let totalWei = BigInt(0);
+
+    for (let i = 1; i <= count; i++) {
+      const d    = await contract.methods.getCampaignDetails(i).call();
+      const myC  = await contract.methods.getUserContribution(i, userAccount).call();
+      const canF = await contract.methods.canFinalize(i).call();
+      const canR = await contract.methods.canRefund(i, userAccount).call();
+      const canW = await contract.methods.canWithdraw(i, userAccount).call();
+
+      allCampaigns.push({ id: i, d, myC, canF, canR, canW });
+      totalWei += BigInt(d.amountRaised);
+    }
+
+    const totalEth = parseFloat(web3.utils.fromWei(totalWei.toString(),'ether'));
+    document.getElementById('totalRaised').textContent = totalEth.toFixed(4);
+
+    renderCampaigns(currentFilter);
+  } catch(e) {
+    console.error(e);
+    list.innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><div>Error loading. Check CONTRACT_ADDRESS!</div></div>';
+  }
+}
+
+// ── RENDER (WITH FILTER) ──────────────────────────────────────
+function renderCampaigns(filter) {
+  currentFilter = filter;
+  const list = document.getElementById('campaignsList');
+  const now  = Math.floor(Date.now() / 1000);
+
+  let items = allCampaigns;
+
+  if (filter === 'active') {
+    items = items.filter(x => !x.d.finalized && Number(x.d.deadline) > now);
+  } else if (filter === 'ended') {
+    items = items.filter(x => x.d.finalized || Number(x.d.deadline) <= now);
+  } else if (filter === 'mine') {
+    if (!userAccount) {
+      items = [];
+    } else {
+      items = items.filter(x => x.d.creator.toLowerCase() === userAccount.toLowerCase());
+    }
+  }
+
+  if (items.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="icon">🔍</div><div>No campaigns in this category</div></div>';
+    return;
+  }
+
+  list.innerHTML = '<div class="campaigns-grid" id="cardsGrid"></div>';
+  const grid = document.getElementById('cardsGrid');
+
+  items.forEach(({ id, d, myC, canF, canR, canW }) => {
+    const goalEth   = parseFloat(web3.utils.fromWei(d.goalAmount,'ether'));
+    const raisedEth = parseFloat(web3.utils.fromWei(d.amountRaised,'ether'));
+    const myEth     = parseFloat(web3.utils.fromWei(myC,'ether'));
+    const pct       = goalEth > 0 ? Math.min((raisedEth / goalEth) * 100, 100) : 0;
+    const timeLeft  = Math.max(0, Number(d.deadline) - now);
+    const alive     = !d.finalized && Number(d.deadline) > now;
+
+    // Badge
+    let badgeHtml;
+    if (d.finalized && d.goalReached)       badgeHtml = '<div class="badge success">✅ Funded!</div>';
+    else if (d.finalized && !d.goalReached) badgeHtml = '<div class="badge ended">❌ Failed</div>';
+    else if (!alive)                         badgeHtml = '<div class="badge ended">⏰ Expired</div>';
+    else                                     badgeHtml = '<div class="badge active">🟢 Active</div>';
+
+    // My contribution box
+    const myContribHtml = myEth > 0
+      ? `<div class="my-contribution">💼 Your contribution: <strong style="color:#FFD700">${myEth.toFixed(4)} ETH</strong> → earned <strong style="color:#FFD700">${(myEth*100).toFixed(0)} NOVA</strong></div>`
+      : '';
+
+    // Action buttons
+    let actionsHtml = '';
+
+    if (alive) {
+      // CONTRIBUTE button
+      actionsHtml += `
+        <div class="action-row">
+          <input type="number" id="amt-${id}" placeholder="0.01 ETH" step="0.001" min="0.001">
+          <button class="btn btn-green btn-sm" onclick="contribute(${id})">💰 Support</button>
+        </div>`;
+    }
+
+    if (canF) {
+      // FINALIZE button (only if deadline passed and not finalized)
+      actionsHtml += `
+        <div class="action-row">
+          <button class="btn btn-blue btn-sm" style="width:100%" onclick="finalize(${id})">
+            🏁 Finalize Campaign
+          </button>
+        </div>`;
+    }
+
+    if (canR) {
+      // REFUND button (only if finalized + goal not reached + user contributed)
+      actionsHtml += `
+        <div class="action-row">
+          <button class="btn btn-red btn-sm" style="width:100%" onclick="refund(${id})">
+            💸 Get Refund (${myEth.toFixed(4)} ETH)
+          </button>
+        </div>`;
+    }
+
+    if (canW) {
+      // WITHDRAW button (creator only, finalized successful campaign)
+      const withdrawableEth = parseFloat(web3.utils.fromWei(d.creatorWithdrawable || '0','ether'));
+      actionsHtml += `
+        <div class="action-row">
+          <button class="btn btn-gold btn-sm" style="width:100%" onclick="withdrawFunds(${id})">
+            🏦 Withdraw (${withdrawableEth.toFixed(4)} ETH)
+          </button>
+        </div>`;
+    }
+
+    if (!alive && !canF && !canR && !canW && myEth === 0) {
+      actionsHtml = '<div style="text-align:center;font-size:13px;opacity:.5;padding:8px">Campaign ended</div>';
+    }
+
+    const card = document.createElement('div');
+    card.className = 'campaign-card';
+    card.innerHTML = `
+      <div class="card-header">
+        <div class="card-title">${esc(d.title)}</div>
+        ${badgeHtml}
+      </div>
+      <div class="card-desc">${esc(d.description)}</div>
+      <div class="card-stats">
+        <div class="cs"><div class="cs-val">${goalEth} ETH</div><div class="cs-lbl">Goal</div></div>
+        <div class="cs"><div class="cs-val">${raisedEth.toFixed(3)} ETH</div><div class="cs-lbl">Raised</div></div>
+        <div class="cs"><div class="cs-val">${formatTimeLeft(timeLeft)}</div><div class="cs-lbl">Left</div></div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div class="progress-text">${pct.toFixed(1)}% funded</div>
+      <div class="reward-info">🎁 Rate: <strong style="color:#FFD700">100 NOVA</strong> per 1 ETH</div>
+      ${myContribHtml}
+      <div class="card-actions">${actionsHtml}</div>
+      <div class="creator-addr">Creator: ${short(d.creator)} · Campaign #${id}</div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+// ── FILTER TABS ───────────────────────────────────────────────
+function filterCampaigns(filter, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderCampaigns(filter);
+}
+
+// ── CREATE CAMPAIGN ───────────────────────────────────────────
+async function createCampaign(e) {
+  e.preventDefault();
+  if (!userAccount) { showAlert('Connect wallet first!', 'error'); return; }
+
+  const title = document.getElementById('fTitle').value.trim();
+  const desc  = document.getElementById('fDesc').value.trim();
+  const goal  = document.getElementById('fGoal').value;
+  const seconds  = document.getElementById('fSeconds').value;
+
+  try {
+    showAlert('📝 Creating... Confirm in MetaMask!', 'success');
+    await contract.methods
+      .createCampaignSeconds(title, desc, web3.utils.toWei(goal,'ether'), seconds)
+      .send({ from: userAccount });
+
+    showAlert('🎉 Campaign created successfully!', 'success');
+    document.getElementById('createForm').reset();
+    await loadCampaigns();
+  } catch(e) { showAlert('❌ ' + (e.message||'Failed'), 'error'); }
+}
+
+// ── CONTRIBUTE ────────────────────────────────────────────────
+async function contribute(id) {
+  if (!userAccount) { showAlert('Connect wallet first!', 'error'); return; }
+  const amt = document.getElementById(`amt-${id}`)?.value;
+  if (!amt || parseFloat(amt) <= 0) { showAlert('Enter a valid ETH amount!', 'error'); return; }
+
+  try {
+    showAlert(`💸 Contributing ${amt} ETH... Confirm in MetaMask!`, 'success');
+    await contract.methods.contribute(id)
+      .send({ from: userAccount, value: web3.utils.toWei(amt,'ether') });
+
+    showAlert(`✅ Done! You earned ${(parseFloat(amt)*100).toFixed(0)} NOVA tokens! 🎁`, 'success');
+    await loadAll();
+  } catch(e) { showAlert('❌ ' + (e.message||'Failed'), 'error'); }
+}
+
+// ── FINALIZE ──────────────────────────────────────────────────
+async function finalize(id) {
+  if (!userAccount) { showAlert('Connect wallet first!', 'error'); return; }
+  try {
+    showAlert('🏁 Finalizing campaign... Confirm in MetaMask!', 'success');
+    await contract.methods.finalizeCampaign(id).send({ from: userAccount });
+    showAlert('✅ Campaign finalized! Creator can now withdraw if goal reached.', 'success');
+    await loadAll();
+  } catch(e) { showAlert('❌ ' + (e.message||'Failed'), 'error'); }
+}
+
+// ── WITHDRAW ──────────────────────────────────────────────────
+async function withdrawFunds(id) {
+  if (!userAccount) { showAlert('Connect wallet first!', 'error'); return; }
+  try {
+    showAlert('🏦 Withdrawing funds... Confirm in MetaMask!', 'success');
+    await contract.methods.withdraw(id).send({ from: userAccount });
+    showAlert('✅ Withdrawal successful! ETH sent to creator wallet.', 'success');
+    await loadAll();
+  } catch(e) { showAlert('❌ ' + (e.message||'Failed'), 'error'); }
+}
+
+// ── REFUND ────────────────────────────────────────────────────
+async function refund(id) {
+  if (!userAccount) { showAlert('Connect wallet first!', 'error'); return; }
+  try {
+    showAlert('💸 Requesting refund... Confirm in MetaMask!', 'success');
+    await contract.methods.refund(id).send({ from: userAccount });
+    showAlert('✅ Refund received! ETH returned to your wallet.', 'success');
+    await loadAll();
+  } catch(e) { showAlert('❌ ' + (e.message||'Failed'), 'error'); }
+}
+
+// ── HELPERS ───────────────────────────────────────────────────
+function short(a) { return a ? a.slice(0,6)+'...'+a.slice(-4) : '—'; }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function formatTimeLeft(seconds) {
+  if (seconds <= 0) return '0s';
+  if (seconds < 60) return `${seconds}s`;
+  if (seconds < 3600) return `${Math.ceil(seconds / 60)}m`;
+  if (seconds < 86400) return `${Math.ceil(seconds / 3600)}h`;
+  return `${Math.ceil(seconds / 86400)}d`;
+}
+function showAlert(msg, type) {
+  const d = document.getElementById('alerts');
+  d.innerHTML = `<div class="alert alert-${type}" style="display:block">${msg}</div>`;
+  setTimeout(() => d.innerHTML='', 7000);
+}
+</script>
+</body>
+</html>
